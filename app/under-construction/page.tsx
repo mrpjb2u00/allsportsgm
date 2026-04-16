@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export default function UnderConstruction() {
+export default function UnderConstructionPage() {
+  const images = [
+    "/images/auth-basketball.jpg",
+    "/images/auth-football2.jpg",
+    "/images/auth-baseball.jpg",
+  ];
+
+  const [currentImage, setCurrentImage] = useState(0);
   const [password, setPassword] = useState("");
-  const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
-    setFadeIn(true);
-  }, []);
+    const interval = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const handleSubmit = () => {
     if (password === "gm2026") {
@@ -20,54 +30,66 @@ export default function UnderConstruction() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden">
-
-      {/* 🔥 Animated Background */}
-      <div className="absolute inset-0 bg-[url('/images/auth-basketball.jpg')] bg-cover bg-center opacity-20 animate-pulse" />
-
-      {/* 🔥 Dark overlay */}
-      <div className="absolute inset-0 bg-black/80" />
-
-      {/* 🔥 Content */}
-      <div
-        className={`relative z-10 text-center px-6 transition-all duration-1000 ${
-          fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
-      >
-        <h1 className="text-5xl font-bold mb-4 tracking-wide">
-          AllSports GM
-        </h1>
-
-        <p className="text-xl mb-2 text-gray-300">
-          Build. Manage. Dominate.
-        </p>
-
-        <p className="mb-8 text-gray-400">
-          🚧 Private Beta — Under Construction 🚧
-        </p>
-
-        {/* 🔐 Password Input */}
-        <div className="flex flex-col items-center gap-4">
-          <input
-            type="password"
-            placeholder="Enter access password"
-            className="px-4 py-2 rounded bg-white text-black w-64 text-center"
-            onChange={(e) => setPassword(e.target.value)}
+    <main className="relative min-h-screen overflow-hidden text-white">
+      <div className="absolute inset-0">
+        {images.map((img, index) => (
+          <div
+            key={img}
+            className={`absolute inset-0 bg-cover bg-center transition-all duration-[6000ms] ${
+              index === currentImage ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              backgroundImage: `url(${img})`,
+              transform: index === currentImage ? "scale(1.05)" : "scale(1)",
+            }}
           />
-
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 transition rounded font-semibold"
-          >
-            Enter
-          </button>
-        </div>
-
-        {/* 🔥 Subtle footer */}
-        <p className="mt-10 text-sm text-gray-500">
-          Early access only
-        </p>
+        ))}
       </div>
-    </div>
+
+      <div className="absolute inset-0 bg-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/65" />
+
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6">
+        <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-black/55 p-8 text-center shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-md md:p-10">
+          <div className="mb-4 inline-flex items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-400">
+            Private Beta Access
+          </div>
+
+          <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
+            AllSports GM
+          </h1>
+
+          <p className="mt-4 text-lg text-zinc-200 md:text-xl">
+            Build. Manage. Dominate.
+          </p>
+
+          <p className="mt-3 text-sm text-zinc-300 md:text-base">
+            The ultimate multi-sport franchise simulator is currently under construction.
+            Enter the access password to continue.
+          </p>
+
+          <div className="mt-8 space-y-4">
+            <input
+              type="password"
+              placeholder="Enter access password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-12 w-full rounded-xl border border-white/10 bg-black/40 px-4 text-center text-white outline-none transition focus:border-orange-500"
+            />
+
+            <button
+              onClick={handleSubmit}
+              className="h-12 w-full rounded-xl bg-orange-500 px-6 font-semibold text-white transition hover:bg-orange-600"
+            >
+              Enter Site
+            </button>
+          </div>
+
+          <p className="mt-8 text-xs uppercase tracking-[0.25em] text-zinc-500">
+            Early Access Only
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }

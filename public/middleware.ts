@@ -3,17 +3,17 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
-
   const access = request.cookies.get("access_granted");
 
-  const isUnderConstructionPage = url.pathname === "/under-construction";
+  const isAllowedPath =
+    url.pathname === "/under-construction" ||
+    url.pathname.startsWith("/_next") ||
+    url.pathname === "/favicon.ico";
 
-  // Allow access to under construction page
-  if (isUnderConstructionPage) {
+  if (isAllowedPath) {
     return NextResponse.next();
   }
 
-  // If no access, redirect
   if (!access) {
     url.pathname = "/under-construction";
     return NextResponse.redirect(url);
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: ["/((?!api).*)"],
 };
