@@ -6,6 +6,12 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+type TestUser = {
+  name: string;
+  email: string;
+  tier: "Rookie" | "Pro" | "Veteran";
+};
+
 export default function AuthPage() {
   const images = [
     "/images/auth-basketball.jpg",
@@ -15,6 +21,8 @@ export default function AuthPage() {
 
   const [currentImage, setCurrentImage] = useState(0);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,6 +31,50 @@ export default function AuthPage() {
 
     return () => clearInterval(interval);
   }, [images.length]);
+
+  const testUsers: TestUser[] = [
+    {
+      name: "Rookie Tester",
+      email: "rookie@test.com",
+      tier: "Rookie",
+    },
+    {
+      name: "Pro Tester",
+      email: "pro@test.com",
+      tier: "Pro",
+    },
+    {
+      name: "Veteran Tester",
+      email: "veteran@test.com",
+      tier: "Veteran",
+    },
+  ];
+
+  const setLoginCookies = (user: TestUser) => {
+  document.cookie = "logged_in=true; path=/; max-age=604800; SameSite=Lax";
+  document.cookie = `membership_tier=${user.tier}; path=/; max-age=604800; SameSite=Lax`;
+  localStorage.setItem("logged_in_user", JSON.stringify(user));
+
+  setTimeout(() => {
+    window.location.href = "/dashboard";
+  }, 150);
+};
+
+  const handleTestLogin = (user: TestUser) => {
+    setLoginCookies(user);
+  };
+
+  const handleFakeSignin = () => {
+    const matched =
+      testUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) ||
+      {
+        name: email ? email.split("@")[0] : "Test User",
+        email: email || "user@test.com",
+        tier: "Rookie" as const,
+      };
+
+    setLoginCookies(matched);
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
@@ -127,22 +179,63 @@ export default function AuthPage() {
                 <input
                   type="email"
                   placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="h-12 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-white focus:border-orange-500 focus:outline-none"
                 />
 
                 <input
                   type="password"
                   placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="h-12 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-white focus:border-orange-500 focus:outline-none"
                 />
 
-                <Button className="h-12 w-full bg-orange-500 text-white hover:bg-orange-600">
+                <Button
+                  className="h-12 w-full bg-orange-500 text-white hover:bg-orange-600"
+                  onClick={handleFakeSignin}
+                >
                   {mode === "signin" ? "Sign In" : "Create Account"}
                 </Button>
               </div>
 
+              <div className="space-y-3 rounded-xl border border-white/10 bg-black/25 p-4">
+                <p className="text-center text-sm font-medium text-zinc-300">
+                  Quick Test Login
+                </p>
+
+                {testUsers.map((user) => (
+                  <button
+                    key={user.email}
+                    type="button"
+                    onClick={() => handleTestLogin(user)}
+                    className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-left text-sm transition hover:border-orange-500 hover:bg-black/40"
+                  >
+                    <div>
+                      <p className="font-medium text-white">{user.name}</p>
+                      <p className="text-xs text-zinc-400">{user.email}</p>
+                    </div>
+
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        user.tier === "Rookie"
+                          ? "bg-zinc-700 text-zinc-200"
+                          : user.tier === "Pro"
+                          ? "bg-blue-500/20 text-blue-300"
+                          : "bg-orange-500/20 text-orange-300"
+                      }`}
+                    >
+                      {user.tier}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <p className="text-center text-sm text-zinc-400">
-                {mode === "signin" ? "Don&apos;t have an account?" : "Already have an account?"}{" "}
+                {mode === "signin"
+                  ? "Don&apos;t have an account?"
+                  : "Already have an account?"}{" "}
                 <button
                   type="button"
                   onClick={() =>
