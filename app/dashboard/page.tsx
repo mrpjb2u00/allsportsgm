@@ -6,10 +6,12 @@ import {
   ArrowRight,
   ClipboardList,
   DollarSign,
+  Lock,
+  LogOut,
   Trophy,
   Users,
   UserCog,
-  LogOut,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -46,6 +48,8 @@ type LoggedInUser = {
   tier: "Rookie" | "Pro" | "Veteran";
 };
 
+type MembershipTier = "Rookie" | "Pro" | "Veteran";
+
 export default function DashboardPage() {
   const images = [
     "/images/auth-basketball.jpg",
@@ -58,7 +62,7 @@ export default function DashboardPage() {
   const [roster, setRoster] = useState<Player[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
-  const [tier, setTier] = useState<string>("Unknown");
+  const [tier, setTier] = useState<MembershipTier>("Rookie");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -91,7 +95,10 @@ export default function DashboardPage() {
 
     const tierMatch = document.cookie.match(/(?:^|;\s*)membership_tier=([^;]+)/);
     if (tierMatch?.[1]) {
-      setTier(decodeURIComponent(tierMatch[1]));
+      const decodedTier = decodeURIComponent(tierMatch[1]) as MembershipTier;
+      if (decodedTier === "Rookie" || decodedTier === "Pro" || decodedTier === "Veteran") {
+        setTier(decodedTier);
+      }
     }
   }, []);
 
@@ -103,18 +110,18 @@ export default function DashboardPage() {
   const staffCap = 20;
   const remainingStaffCap = staffCap - totalStaffSalary;
 
-  const resetAll = () => {
-    localStorage.removeItem("franchise");
-    localStorage.removeItem("roster");
-    localStorage.removeItem("staff");
-    location.reload();
-  };
-
   const handleLogout = () => {
     document.cookie = "logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     document.cookie = "membership_tier=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     localStorage.removeItem("logged_in_user");
     window.location.href = "/auth";
+  };
+
+  const resetAll = () => {
+    localStorage.removeItem("franchise");
+    localStorage.removeItem("roster");
+    localStorage.removeItem("staff");
+    location.reload();
   };
 
   const hasFranchise = !!franchise;
@@ -128,47 +135,90 @@ export default function DashboardPage() {
       ? "bg-zinc-700 text-zinc-200"
       : tier === "Pro"
       ? "bg-blue-500/20 text-blue-300"
-      : tier === "Veteran"
-      ? "bg-orange-500/20 text-orange-300"
-      : "bg-white/10 text-zinc-200";
+      : "bg-orange-500/20 text-orange-300";
+
+  const canUseRosterBuilder = tier === "Pro" || tier === "Veteran";
+  const canUseStaff = tier === "Veteran";
+  const canUseSimulation = tier === "Veteran";
+
+  const renderFeatureButton = ({
+    href,
+    label,
+    icon,
+    isLocked,
+    lockedText,
+  }: {
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+    isLocked: boolean;
+    lockedText: string;
+  }) => {
+    if (isLocked) {
+      return (
+        <div className="group relative">
+          <button
+            disabled
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-zinc-900/60 px-6 text-sm font-medium text-zinc-500 md:w-auto"
+          >
+            <Lock className="h-4 w-4" />
+            {label}
+          </button>
+
+          <p className="mt-2 text-xs text-zinc-500">{lockedText}</p>
+        </div>
+      );
+    }
+
+    return (
+      <Link href={href}>
+        <Button className="h-11 border border-white/20 bg-black/20 px-6 text-white hover:border-white/40 hover:bg-white/10">
+          <span className="flex items-center gap-2">
+            {label}
+            {icon}
+          </span>
+        </Button>
+      </Link>
+    );
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur-md">
-  <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
-    <div className="flex items-center gap-2 font-semibold">
-      <Trophy className="h-5 w-5 shrink-0 text-orange-400" />
-      <span className="text-base sm:text-lg">AllSports GM</span>
-    </div>
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2 font-semibold">
+            <Trophy className="h-5 w-5 shrink-0 text-orange-400" />
+            <span className="text-lg leading-none">AllSports GM</span>
+          </div>
 
-    <div className="flex flex-wrap items-center gap-2 md:justify-end">
-      <span className="text-sm text-zinc-300">
-        {loggedInUser?.name || franchise?.gmUsername || "GM"}
-      </span>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
+            <span className="text-sm text-zinc-300">
+              {loggedInUser?.name || franchise?.gmUsername || "GM"}
+            </span>
 
-      <span className={`rounded-full px-3 py-1 text-xs font-medium ${tierClasses}`}>
-        {tier}
-      </span>
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${tierClasses}`}>
+              {tier}
+            </span>
 
-      <button
-        onClick={handleLogout}
-        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
-      >
-        <LogOut className="h-4 w-4" />
-        Logout
-      </button>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
 
-      {franchise && (
-        <button
-          onClick={resetAll}
-          className="text-xs text-red-400 hover:text-red-300"
-        >
-          Reset Franchise
-        </button>
-      )}
-    </div>
-  </div>
-</header>
+            {franchise && (
+              <button
+                onClick={resetAll}
+                className="text-xs text-red-400 hover:text-red-300"
+              >
+                Reset Franchise
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
 
       <div className="relative h-[360px] w-full overflow-hidden">
         <div className="absolute inset-0">
@@ -233,23 +283,29 @@ export default function DashboardPage() {
               </Button>
             </Link>
 
-            <Link href="/roster-builder">
-              <Button className="h-11 border border-white/20 bg-black/20 px-6 text-white hover:bg-white/10 hover:border-white/40">
-                <span className="flex items-center gap-2">
-                  Build Roster
-                  <ClipboardList className="h-4 w-4" />
-                </span>
-              </Button>
-            </Link>
+            {renderFeatureButton({
+              href: "/roster-builder",
+              label: "Build Roster",
+              icon: <ClipboardList className="h-4 w-4" />,
+              isLocked: !canUseRosterBuilder,
+              lockedText: "Upgrade to Pro or Veteran to unlock roster building.",
+            })}
 
-            <Link href="/staff">
-              <Button className="h-11 border border-white/20 bg-black/20 px-6 text-white hover:bg-white/10 hover:border-white/40">
-                <span className="flex items-center gap-2">
-                  Manage Staff
-                  <UserCog className="h-4 w-4" />
-                </span>
-              </Button>
-            </Link>
+            {renderFeatureButton({
+              href: "/staff",
+              label: "Manage Staff",
+              icon: <UserCog className="h-4 w-4" />,
+              isLocked: !canUseStaff,
+              lockedText: "Upgrade to Veteran to unlock staff management.",
+            })}
+
+            {renderFeatureButton({
+              href: "/simulate",
+              label: "Simulate Games",
+              icon: <Zap className="h-4 w-4" />,
+              isLocked: !canUseSimulation,
+              lockedText: "Upgrade to Veteran to unlock live simulation.",
+            })}
           </div>
         </div>
 
@@ -318,39 +374,27 @@ export default function DashboardPage() {
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-            <h2 className="text-xl font-semibold">What to do next</h2>
+            <h2 className="text-xl font-semibold">Membership Access</h2>
 
             <div className="mt-6 space-y-4">
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                <p className="font-medium">
-                  {hasFranchise ? "1. Fine-tune your franchise" : "1. Create your franchise"}
-                </p>
+                <p className="font-medium text-white">Rookie</p>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {hasFranchise
-                    ? "Update your city, team name, and colors if needed."
-                    : "Choose your city, team name, colors, and conference."}
+                  Create a franchise and explore the basic front office experience.
                 </p>
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                <p className="font-medium">2. Build your roster</p>
+                <p className="font-medium text-white">Pro</p>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {fullRoster
-                    ? "Your 15-player roster is complete."
-                    : hasRoster
-                    ? `You currently have ${roster.length} players. Keep building toward a full 15-player roster.`
-                    : "Add players by position and stay under the salary cap."}
+                  Unlock roster building and deeper franchise setup tools.
                 </p>
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                <p className="font-medium">3. Build your staff</p>
+                <p className="font-medium text-white">Veteran</p>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {fullStaff
-                    ? "Your core staff is complete and ready."
-                    : hasStaff
-                    ? `You currently have ${staff.length} staff members. Fill all 4 required roles.`
-                    : "Hire one Head Coach, one Assistant Coach, one Trainer, and one Scout."}
+                  Unlock the full experience including staff management and game simulation.
                 </p>
               </div>
             </div>
@@ -391,6 +435,18 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-6">
+          <h3 className="text-lg font-semibold text-orange-300">Current Tier Permissions</h3>
+          <p className="mt-2 text-sm text-zinc-300">
+            {tier === "Rookie" &&
+              "Rookie can create a franchise, but roster building, staff management, and simulation are locked."}
+            {tier === "Pro" &&
+              "Pro can create a franchise and build a roster, but staff management and simulation are still locked."}
+            {tier === "Veteran" &&
+              "Veteran has full access to franchise creation, roster building, staff management, and simulation."}
+          </p>
         </div>
       </section>
     </main>
