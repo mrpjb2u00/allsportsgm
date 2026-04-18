@@ -9,6 +9,7 @@ import {
   Trophy,
   Users,
   UserCog,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -39,6 +40,12 @@ type StaffMember = {
   salary: number;
 };
 
+type LoggedInUser = {
+  name: string;
+  email: string;
+  tier: "Rookie" | "Pro" | "Veteran";
+};
+
 export default function DashboardPage() {
   const images = [
     "/images/auth-basketball.jpg",
@@ -50,6 +57,8 @@ export default function DashboardPage() {
   const [franchise, setFranchise] = useState<FranchiseData | null>(null);
   const [roster, setRoster] = useState<Player[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
+  const [tier, setTier] = useState<string>("Unknown");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -74,6 +83,16 @@ export default function DashboardPage() {
     if (savedStaff) {
       setStaff(JSON.parse(savedStaff));
     }
+
+    const savedUser = localStorage.getItem("logged_in_user");
+    if (savedUser) {
+      setLoggedInUser(JSON.parse(savedUser));
+    }
+
+    const tierMatch = document.cookie.match(/(?:^|;\s*)membership_tier=([^;]+)/);
+    if (tierMatch?.[1]) {
+      setTier(decodeURIComponent(tierMatch[1]));
+    }
   }, []);
 
   const totalSalary = roster.reduce((sum, player) => sum + player.salary, 0);
@@ -91,11 +110,27 @@ export default function DashboardPage() {
     location.reload();
   };
 
+  const handleLogout = () => {
+    document.cookie = "logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "membership_tier=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    localStorage.removeItem("logged_in_user");
+    window.location.href = "/auth";
+  };
+
   const hasFranchise = !!franchise;
   const hasRoster = roster.length > 0;
   const fullRoster = roster.length === 15;
   const hasStaff = staff.length > 0;
   const fullStaff = staff.length === 4;
+
+  const tierClasses =
+    tier === "Rookie"
+      ? "bg-zinc-700 text-zinc-200"
+      : tier === "Pro"
+      ? "bg-blue-500/20 text-blue-300"
+      : tier === "Veteran"
+      ? "bg-orange-500/20 text-orange-300"
+      : "bg-white/10 text-zinc-200";
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
@@ -106,8 +141,23 @@ export default function DashboardPage() {
             <span>AllSports GM</span>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-zinc-300">
-            <span>Welcome back, {franchise?.gmUsername || "GM"}</span>
+          <div className="flex items-center gap-3 text-sm text-zinc-300">
+            <span>
+              Welcome back,{" "}
+              {loggedInUser?.name || franchise?.gmUsername || "GM"}
+            </span>
+
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${tierClasses}`}>
+              {tier}
+            </span>
+
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
 
             {franchise && (
               <button
@@ -216,9 +266,7 @@ export default function DashboardPage() {
                 <p className="text-xl font-semibold">
                   {franchise.city} {franchise.teamName}
                 </p>
-                <p className="mt-2 text-sm text-zinc-400">
-                  {franchise.conference}
-                </p>
+                <p className="mt-2 text-sm text-zinc-400">{franchise.conference}</p>
               </>
             ) : (
               <>
@@ -326,6 +374,11 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
                 <span className="text-sm text-zinc-400">Staff progress</span>
                 <span className="font-medium">{staff.length} / 4</span>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <span className="text-sm text-zinc-400">Membership tier</span>
+                <span className="font-medium">{tier}</span>
               </div>
 
               <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
