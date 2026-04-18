@@ -135,41 +135,40 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 font-semibold">
-            <Trophy className="h-5 w-5 text-orange-400" />
-            <span>AllSports GM</span>
-          </div>
+  <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
+    <div className="flex items-center gap-2 font-semibold">
+      <Trophy className="h-5 w-5 shrink-0 text-orange-400" />
+      <span className="text-base sm:text-lg">AllSports GM</span>
+    </div>
 
-          <div className="flex items-center gap-3 text-sm text-zinc-300">
-            <span>
-              Welcome back,{" "}
-              {loggedInUser?.name || franchise?.gmUsername || "GM"}
-            </span>
+    <div className="flex flex-wrap items-center gap-2 md:justify-end">
+      <span className="text-sm text-zinc-300">
+        {loggedInUser?.name || franchise?.gmUsername || "GM"}
+      </span>
 
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${tierClasses}`}>
-              {tier}
-            </span>
+      <span className={`rounded-full px-3 py-1 text-xs font-medium ${tierClasses}`}>
+        {tier}
+      </span>
 
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
+      <button
+        onClick={handleLogout}
+        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
+      >
+        <LogOut className="h-4 w-4" />
+        Logout
+      </button>
 
-            {franchise && (
-              <button
-                onClick={resetAll}
-                className="text-xs text-red-400 hover:text-red-300"
-              >
-                Reset Franchise
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      {franchise && (
+        <button
+          onClick={resetAll}
+          className="text-xs text-red-400 hover:text-red-300"
+        >
+          Reset Franchise
+        </button>
+      )}
+    </div>
+  </div>
+</header>
 
       <div className="relative h-[360px] w-full overflow-hidden">
         <div className="absolute inset-0">
